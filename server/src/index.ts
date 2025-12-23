@@ -1317,8 +1317,9 @@ const MIME_TYPES: Record<string, string> = {
     '.wav': 'audio/wav',
 };
 
-// Resolve client dist path (relative to server dist in production)
-const CLIENT_DIST_PATH = join(process.cwd(), 'client', 'dist');
+// Resolve client dist path
+// When running via workspace, CWD is /app/server, so we need to go up one level
+const CLIENT_DIST_PATH = join(process.cwd(), '..', 'client', 'dist');
 
 function serveStaticFile(req: IncomingMessage, res: ServerResponse): void {
     let filePath = req.url || '/';
