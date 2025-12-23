@@ -1435,6 +1435,9 @@ setInterval(() => {
 httpServer.listen(PORT, () => {
     console.log(`[Server] HTTP + WebSocket server running on port ${PORT}`);
     console.log(`[Server] Static files: ${CLIENT_DIST_PATH}`);
+    console.log(`[Server] Client dist exists: ${existsSync(CLIENT_DIST_PATH)}`);
+    console.log(`[Server] Index.html exists: ${existsSync(join(CLIENT_DIST_PATH, 'index.html'))}`);
+    console.log(`[Server] CWD: ${process.cwd()}`);
     console.log(`[Server] Protocol version: ${PROTOCOL_VERSION}`);
     console.log(`[Server] Heartbeat: PING every ${PING_INTERVAL_MS / 1000}s, timeout ${PONG_TIMEOUT_MS / 1000}s`);
 });
