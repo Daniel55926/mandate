@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm run build --workspace=shared && npm run build --workspace=client && npm run build --workspace=server && npm run build --workspace=tools/asset_pipeline"
+buildCommand = "npm run build --workspace=shared && npm run build --workspace=tools/asset_pipeline && npm run build --workspace=client && npm run build --workspace=server"
 
 [deploy]
 startCommand = "npm run start"
