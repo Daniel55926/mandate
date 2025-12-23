@@ -31,6 +31,7 @@ class PlayerTile extends Container {
     private glowGraphics: Graphics;
     private nameText: Text;
     private scoreText: Text;
+    private roundsWonText: Text;
     private turnBadge: Graphics;
     private turnBadgeText: Text;
 
@@ -65,22 +66,37 @@ class PlayerTile extends Container {
         });
         this.nameText.anchor.set(0, 0.5);
         this.nameText.x = -TILE_WIDTH / 2 + 15;
-        this.nameText.y = -10;
+        this.nameText.y = -18;
         this.addChild(this.nameText);
 
-        // Score
+        // Score (districts this round)
         this.scoreText = new Text({
-            text: 'Score: 0',
+            text: 'Districts: 0',
             style: {
                 fontFamily: 'Inter, sans-serif',
-                fontSize: 12,
+                fontSize: 11,
                 fill: 0xcccccc,
             },
         });
         this.scoreText.anchor.set(0, 0.5);
         this.scoreText.x = -TILE_WIDTH / 2 + 15;
-        this.scoreText.y = 15;
+        this.scoreText.y = 5;
         this.addChild(this.scoreText);
+
+        // Rounds won (match score)
+        this.roundsWonText = new Text({
+            text: 'Rounds: 0/2',
+            style: {
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 11,
+                fontWeight: 'bold',
+                fill: 0xFFD700,  // Gold color for rounds won
+            },
+        });
+        this.roundsWonText.anchor.set(0, 0.5);
+        this.roundsWonText.x = -TILE_WIDTH / 2 + 15;
+        this.roundsWonText.y = 20;
+        this.addChild(this.roundsWonText);
 
         // Turn order badge
         this.turnBadge = new Graphics();
@@ -167,7 +183,11 @@ class PlayerTile extends Container {
     }
 
     public setScore(score: number): void {
-        this.scoreText.text = `Score: ${score}`;
+        this.scoreText.text = `Districts: ${score}`;
+    }
+
+    public setRoundsWon(wins: number): void {
+        this.roundsWonText.text = `Rounds: ${wins}/2`;
     }
 
     public setTurnOrder(order: number): void {
@@ -268,6 +288,13 @@ export class PlayerHUD extends Container {
         this.tiles.forEach((tile, seat) => {
             const newScore = scores[seat] || 0;
             tile.setScore(newScore);
+        });
+    }
+
+    public updateRoundsWon(matchScore: Record<Seat, number>): void {
+        this.tiles.forEach((tile, seat) => {
+            const wins = matchScore[seat] || 0;
+            tile.setRoundsWon(wins);
         });
     }
 

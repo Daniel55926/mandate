@@ -773,8 +773,13 @@ export class MatchScene {
         });
         this.playerHUD.updateScores(scores);
 
+        // Update rounds won (match score)
+        if (this.state.match) {
+            this.playerHUD.updateRoundsWon(this.state.match.match_score);
+        }
+
         // Update round and turn info
-        const round_num = 1; // TODO: Get from match state when available
+        const round_num = round.round_index;
         const total_rounds = 3; // Best of 3
         this.playerHUD.updateRound(round_num, total_rounds);
 
