@@ -371,18 +371,31 @@ function executeAutoPlay(
 
             // Round constructor already deals cards, so we just emit events
             emitEvent(room, 'ROUND_STARTED', {
-                round_number: room.match.round_index,
-                starting_seat: newRound.active_seat,
-                hands: Object.fromEntries(
-                    ['LEFT', 'RIGHT', 'INDEP'].map(s => [s, newRound.getHand(s as Seat)])
-                ),
+                round_id: newRound.round_id,
+                round_index: room.match.round_index,
+                starting_seat: newRound.starting_seat,
+                active_seat: newRound.active_seat,
                 draw_pile_count: newRound.draw_pile_count,
+                hand_counts: newRound.getHandCounts(),
             });
 
+            // Send fresh hand snapshots to each player
+            for (const seat of ['LEFT', 'RIGHT', 'INDEP'] as Seat[]) {
+                const playerId = room.match.getPlayerIdForSeat(seat);
+                const playerSession = room.sessions.get(playerId);
+                if (playerSession) {
+                    const handSnapshot = buildEventMessage(room.roomId, 'HAND_SNAPSHOT', room.eventSeq, {
+                        hand: newRound.getPrivateHand(seat),
+                    });
+                    send(playerSession.ws, handSnapshot);
+                }
+            }
+
             // Start first turn
+            newRound.startTurn();
             emitEvent(room, 'TURN_STARTED', {
-                seat: newRound.active_seat,
-                turn_number: 1,
+                active_seat: newRound.active_seat,
+                turn_number: newRound.turn_number,
             });
         }, 2000); // 2 second delay between rounds
 
@@ -846,18 +859,31 @@ function finalizePlay(
 
             // Round constructor already deals cards, so we just emit events
             emitEvent(room, 'ROUND_STARTED', {
-                round_number: room.match.round_index,
-                starting_seat: newRound.active_seat,
-                hands: Object.fromEntries(
-                    ['LEFT', 'RIGHT', 'INDEP'].map(s => [s, newRound.getHand(s as Seat)])
-                ),
+                round_id: newRound.round_id,
+                round_index: room.match.round_index,
+                starting_seat: newRound.starting_seat,
+                active_seat: newRound.active_seat,
                 draw_pile_count: newRound.draw_pile_count,
+                hand_counts: newRound.getHandCounts(),
             });
 
+            // Send fresh hand snapshots to each player
+            for (const seat of ['LEFT', 'RIGHT', 'INDEP'] as Seat[]) {
+                const playerId = room.match.getPlayerIdForSeat(seat);
+                const playerSession = room.sessions.get(playerId);
+                if (playerSession) {
+                    const handSnapshot = buildEventMessage(room.roomId, 'HAND_SNAPSHOT', room.eventSeq, {
+                        hand: newRound.getPrivateHand(seat),
+                    });
+                    send(playerSession.ws, handSnapshot);
+                }
+            }
+
             // Start first turn
+            newRound.startTurn();
             emitEvent(room, 'TURN_STARTED', {
-                seat: newRound.active_seat,
-                turn_number: 1,
+                active_seat: newRound.active_seat,
+                turn_number: newRound.turn_number,
             });
         }, 2000); // 2 second delay between rounds
 
@@ -1097,17 +1123,31 @@ function finalizeCrisisPlay(
             const newRound = room.match.startNextRound();
 
             emitEvent(room, 'ROUND_STARTED', {
-                round_number: room.match.round_index,
-                starting_seat: newRound.active_seat,
-                hands: Object.fromEntries(
-                    ['LEFT', 'RIGHT', 'INDEP'].map(s => [s, newRound.getHand(s as Seat)])
-                ),
+                round_id: newRound.round_id,
+                round_index: room.match.round_index,
+                starting_seat: newRound.starting_seat,
+                active_seat: newRound.active_seat,
                 draw_pile_count: newRound.draw_pile_count,
+                hand_counts: newRound.getHandCounts(),
             });
 
+            // Send fresh hand snapshots to each player
+            for (const seat of ['LEFT', 'RIGHT', 'INDEP'] as Seat[]) {
+                const playerId = room.match.getPlayerIdForSeat(seat);
+                const playerSession = room.sessions.get(playerId);
+                if (playerSession) {
+                    const handSnapshot = buildEventMessage(room.roomId, 'HAND_SNAPSHOT', room.eventSeq, {
+                        hand: newRound.getPrivateHand(seat),
+                    });
+                    send(playerSession.ws, handSnapshot);
+                }
+            }
+
+            // Start first turn
+            newRound.startTurn();
             emitEvent(room, 'TURN_STARTED', {
-                seat: newRound.active_seat,
-                turn_number: 1,
+                active_seat: newRound.active_seat,
+                turn_number: newRound.turn_number,
             });
         }, 2000);
 

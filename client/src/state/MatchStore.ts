@@ -204,6 +204,9 @@ export class MatchStore {
         draw_pile_count: number;
         hand_counts: Record<Seat, number>;
     }): void {
+        // Clear hand from previous round - HAND_SNAPSHOT will provide the new cards
+        this.state.hand = [];
+
         this.state.round = {
             round_id: payload.round_id,
             round_index: payload.round_index,
