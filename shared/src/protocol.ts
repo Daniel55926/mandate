@@ -73,6 +73,9 @@ export type EventType =
     // Crisis
     | 'CRISIS_DECLARATION_REQUIRED'
     | 'CRISIS_DECLARED'
+    // Pass / Stalemate
+    | 'PLAYER_PASSED'
+    | 'STALEMATE_RESOLVED'
     // Hand (private)
     | 'HAND_SNAPSHOT'
     | 'HAND_DELTA'

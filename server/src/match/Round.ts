@@ -74,6 +74,7 @@ export class Round {
     claimed_counts: Record<Seat, number>;
     pending_play: PendingPlay | null;
     pending_crisis: PendingCrisis | null;
+    consecutivePasses: number;  // Track consecutive passes for stalemate detection
 
     constructor(round_index: number, starting_seat: Seat, seed?: string) {
         this.round_id = `round_${round_index}_${Date.now().toString(36)}`;
@@ -92,6 +93,7 @@ export class Round {
         this.claimed_counts = { LEFT: 0, RIGHT: 0, INDEP: 0 };
         this.pending_play = null;
         this.pending_crisis = null;
+        this.consecutivePasses = 0;
 
         this.initDistricts();
         this.deal();
@@ -438,6 +440,133 @@ export class Round {
             }
         }
         return null;
+    }
+
+    // ===========================================================================
+    // Pass / Stalemate System
+    // ===========================================================================
+
+    /**
+     * Check if a player can make at least one legal card play.
+     * Returns true if there's any valid (district, slot) combination.
+     */
+    canMakeLegalMove(seat: Seat): boolean {
+        const hand = this.getHand(seat);
+        if (hand.length === 0) return false;
+
+        // Check each open district for an available slot
+        for (const district of this.getAllDistricts()) {
+            if (district.status === 'CLAIMED') continue;
+
+            const side = district.sides[seat];
+            // Check if any slot is empty
+            for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
+                if (side.slots[slotIdx] === null) {
+                    return true;  // Found at least one valid placement
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Player passes their turn (can't or won't play a card).
+     * Returns true if stalemate is triggered (3 consecutive passes).
+     */
+    pass(seat: Seat): { passed: boolean; stalemateTriggered: boolean } {
+        if (this.active_seat !== seat) {
+            return { passed: false, stalemateTriggered: false };
+        }
+        if (this.phase !== 'TURN_AWAIT_ACTION') {
+            return { passed: false, stalemateTriggered: false };
+        }
+
+        this.consecutivePasses++;
+
+        // Check for stalemate (all 3 players passed consecutively)
+        if (this.consecutivePasses >= 3) {
+            return { passed: true, stalemateTriggered: true };
+        }
+
+        return { passed: true, stalemateTriggered: false };
+    }
+
+    /**
+     * Reset consecutive pass counter (called when a card is played).
+     */
+    resetPassCounter(): void {
+        this.consecutivePasses = 0;
+    }
+
+    /**
+     * Resolve stalemate: award all open districts by card strength.
+     * Returns the round winner if one emerges, or determines winner by tiebreaker.
+     */
+    resolveStalemate(): { winner: Seat; resolvedDistricts: { district_id: string; winner: Seat; reason: string }[] } {
+        const resolvedDistricts: { district_id: string; winner: Seat; reason: string }[] = [];
+
+        // Award each open district to the player with highest card value sum
+        for (const district of this.getAllDistricts()) {
+            if (district.status === 'CLAIMED') continue;
+
+            const seatValues: { seat: Seat; totalValue: number; cardCount: number }[] = [];
+
+            for (const seat of ['LEFT', 'RIGHT', 'INDEP'] as Seat[]) {
+                const cards = district.sides[seat].slots.filter(s => s !== null) as CardInstance[];
+                let totalValue = 0;
+
+                for (const card of cards) {
+                    if (card.kind === 'ASSET' && card.asset_value) {
+                        // A=14, 10=10, 9=9, etc.
+                        if (card.asset_value === 'A') totalValue += 14;
+                        else totalValue += parseInt(card.asset_value, 10);
+                    } else if (card.kind === 'CRISIS' && card.crisis_state?.declared_value) {
+                        totalValue += parseInt(card.crisis_state.declared_value, 10);
+                    }
+                }
+
+                seatValues.push({ seat, totalValue, cardCount: cards.length });
+            }
+
+            // Sort by: totalValue desc, then cardCount desc
+            seatValues.sort((a, b) => {
+                if (b.totalValue !== a.totalValue) return b.totalValue - a.totalValue;
+                return b.cardCount - a.cardCount;
+            });
+
+            // If everyone has 0 value, skip this district (no winner)
+            if (seatValues[0].totalValue === 0 && seatValues[0].cardCount === 0) {
+                continue;
+            }
+
+            // Award to highest
+            const winner = seatValues[0].seat;
+            district.status = 'CLAIMED';
+            district.claimed_by = winner;
+            this.claimed_counts[winner]++;
+
+            resolvedDistricts.push({
+                district_id: district.district_id,
+                winner,
+                reason: `Stalemate: ${seatValues[0].totalValue} points`,
+            });
+        }
+
+        // Determine round winner after stalemate resolution
+        this.phase = 'ROUND_END';
+
+        // Check for 3+ districts
+        for (const seat of ['LEFT', 'RIGHT', 'INDEP'] as Seat[]) {
+            if (this.claimed_counts[seat] >= 3) {
+                return { winner: seat, resolvedDistricts };
+            }
+        }
+
+        // Tiebreaker: highest claimed districts, then total card values
+        const seats = ['LEFT', 'RIGHT', 'INDEP'] as Seat[];
+        seats.sort((a, b) => this.claimed_counts[b] - this.claimed_counts[a]);
+
+        return { winner: seats[0], resolvedDistricts };
     }
 
     // ===========================================================================

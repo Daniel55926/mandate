@@ -790,6 +790,9 @@ function finalizePlay(
     const district = round.getDistrict(payload.district_id);
     const card = district?.sides[seat].slots[payload.slot_index];
 
+    // Reset consecutive pass counter since a card was played
+    round.resetPassCounter();
+
     // ACK the intent
     const ack = buildAck(room.roomId, message.client_intent_id, true);
     session.intentCache.set(message.client_intent_id, ack);
@@ -918,6 +921,167 @@ function finalizePlay(
     });
 
     // Start next turn
+    round.advanceTurn();
+    round.startTurn();
+    emitEvent(room, 'TURN_STARTED', {
+        active_seat: round.active_seat,
+        turn_number: round.turn_number,
+    });
+}
+
+// =============================================================================
+// Pass Turn Handler
+// =============================================================================
+
+function handlePassTurn(session: ClientSession, message: IntentMessage): void {
+    const cached = session.intentCache.get(message.client_intent_id);
+    if (cached) {
+        send(session.ws, cached);
+        return;
+    }
+
+    if (!session.roomId) {
+        const ack = buildAck(null, message.client_intent_id, false, 'ROOM_NOT_FOUND', 'Not in a room');
+        send(session.ws, ack);
+        return;
+    }
+
+    const room = getRoom(session.roomId);
+    if (!room || !room.match || !room.match.current_round) {
+        const ack = buildAck(null, message.client_intent_id, false, 'NO_MATCH', 'No active match');
+        send(session.ws, ack);
+        return;
+    }
+
+    const match = room.match;
+    const round = match.current_round!;  // Already checked above
+    const seat = match.getSeatForPlayer(session.playerId);
+
+    if (!seat) {
+        const ack = buildAck(room.roomId, message.client_intent_id, false, 'NOT_IN_MATCH', 'Not in this match');
+        send(session.ws, ack);
+        return;
+    }
+
+    // Attempt to pass
+    const result = round.pass(seat);
+
+    if (!result.passed) {
+        const ack = buildAck(room.roomId, message.client_intent_id, false, 'INVALID_ACTION' as any, 'Cannot pass right now');
+        send(session.ws, ack);
+        return;
+    }
+
+    // Clear turn timer
+    clearTurnTimer(room);
+
+    // ACK the pass
+    const ack = buildAck(room.roomId, message.client_intent_id, true);
+    session.intentCache.set(message.client_intent_id, ack);
+    send(session.ws, ack);
+
+    // Emit PLAYER_PASSED event
+    emitEvent(room, 'PLAYER_PASSED', {
+        seat,
+        consecutive_passes: round.consecutivePasses,
+        can_make_legal_move: round.canMakeLegalMove(seat),
+    });
+
+    // Check for stalemate
+    if (result.stalemateTriggered) {
+        console.log('[Match] Stalemate triggered! Resolving by card strength...');
+
+        const stalemateResult = round.resolveStalemate();
+
+        // Emit stalemate resolution
+        emitEvent(room, 'STALEMATE_RESOLVED', {
+            winner: stalemateResult.winner,
+            resolved_districts: stalemateResult.resolvedDistricts,
+            claimed_counts: round.claimed_counts,
+        });
+
+        // Record round result
+        match.endRound(stalemateResult.winner);
+
+        emitEvent(room, 'ROUND_ENDED', {
+            winner: stalemateResult.winner,
+            claimed_counts: round.claimed_counts,
+            match_score: match.match_score,
+            reason: 'STALEMATE',
+        });
+
+        // Check if match is over
+        const matchResult = match.checkMatchEnd();
+        if (matchResult) {
+            emitEvent(room, 'MATCH_ENDED', {
+                winner: matchResult.winner,
+                match_score: matchResult.match_score,
+                tiebreak: matchResult.tiebreak,
+            });
+            return;
+        }
+
+        // Start next round after delay
+        setTimeout(() => {
+            if (!room.match) return;
+            const newRound = room.match.startNextRound();
+
+            emitEvent(room, 'ROUND_STARTED', {
+                round_id: newRound.round_id,
+                round_index: room.match.round_index,
+                starting_seat: newRound.starting_seat,
+                active_seat: newRound.active_seat,
+                draw_pile_count: newRound.draw_pile_count,
+                hand_counts: newRound.getHandCounts(),
+            });
+
+            // Send fresh hand snapshots
+            for (const s of ['LEFT', 'RIGHT', 'INDEP'] as Seat[]) {
+                const playerId = room.match.getPlayerIdForSeat(s);
+                const playerSession = room.sessions.get(playerId);
+                if (playerSession) {
+                    const handSnapshot = buildEventMessage(room.roomId, 'HAND_SNAPSHOT', room.eventSeq, {
+                        hand: newRound.getPrivateHand(s),
+                    });
+                    send(playerSession.ws, handSnapshot);
+                }
+            }
+
+            newRound.startTurn();
+            emitEvent(room, 'TURN_STARTED', {
+                active_seat: newRound.active_seat,
+                turn_number: newRound.turn_number,
+            });
+        }, 2000);
+
+        return;
+    }
+
+    // Normal pass - draw a card if deck not empty, then advance turn
+    const drawnCard = round.drawCard(seat);
+    if (drawnCard) {
+        const handSession = room.sessions.get(match.getPlayerIdForSeat(seat));
+        if (handSession) {
+            const handSnapshot = buildEventMessage(room.roomId, 'HAND_SNAPSHOT', room.eventSeq, {
+                hand: round.getPrivateHand(seat),
+            });
+            send(handSession.ws, handSnapshot);
+        }
+    }
+
+    emitEvent(room, 'CARD_DRAWN', {
+        seat,
+        draw_pile_count: round.draw_pile_count,
+        hand_counts: round.getHandCounts(),
+    });
+
+    // End turn, advance
+    round.phase = 'TURN_END';
+    emitEvent(room, 'TURN_ENDED', {
+        seat,
+        turn_number: round.turn_number,
+    });
+
     round.advanceTurn();
     round.startTurn();
     emitEvent(room, 'TURN_STARTED', {
@@ -1313,6 +1477,9 @@ const router: MessageRouter = {
                 break;
             case 'PLAY_CARD':
                 handlePlayCard(session, message);
+                break;
+            case 'PASS':
+                handlePassTurn(session, message);
                 break;
             case 'DECLARE_CRISIS':
                 handleDeclareCrisis(session, message);

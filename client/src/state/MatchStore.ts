@@ -158,6 +158,12 @@ export class MatchStore {
             case 'CRISIS_DECLARED':
                 this.handleCrisisDeclared(event.payload as any);
                 break;
+            case 'PLAYER_PASSED':
+                this.handlePlayerPassed(event.payload as any);
+                break;
+            case 'STALEMATE_RESOLVED':
+                this.handleStalemateResolved(event.payload as any);
+                break;
         }
     }
 
@@ -376,6 +382,53 @@ export class MatchStore {
     }): void {
         // Clear pending crisis
         this.state.pendingCrisis = null;
+        this.notify();
+    }
+
+    private handlePlayerPassed(payload: {
+        seat: Seat;
+        consecutive_passes: number;
+        can_make_legal_move: boolean;
+    }): void {
+        // Log pass to history
+        if (this.onHistoryEvent && this.state.round) {
+            this.onHistoryEvent('PLAYER_PASSED', {
+                turn: this.state.round.turn_number,
+                seat: payload.seat,
+                forced: !payload.can_make_legal_move,
+            });
+        }
+        this.notify();
+    }
+
+    private handleStalemateResolved(payload: {
+        winner: Seat;
+        resolved_districts: { district_id: string; winner: Seat; reason: string }[];
+        claimed_counts: Record<Seat, number>;
+    }): void {
+        if (!this.state.round) return;
+
+        // Update all resolved districts
+        for (const resolved of payload.resolved_districts) {
+            const district = this.state.round.districts.find(
+                d => d.district_id === resolved.district_id
+            );
+            if (district) {
+                district.status = 'CLAIMED';
+                district.claimed_by = resolved.winner;
+            }
+        }
+
+        this.state.round.claimed_counts = payload.claimed_counts;
+
+        // Log to history
+        if (this.onHistoryEvent) {
+            this.onHistoryEvent('STALEMATE_RESOLVED', {
+                winner: payload.winner,
+                resolved_districts: payload.resolved_districts,
+            });
+        }
+
         this.notify();
     }
 
