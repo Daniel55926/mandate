@@ -1367,8 +1367,17 @@ function serveStaticFile(req: IncomingMessage, res: ServerResponse): void {
 // =============================================================================
 
 const httpServer = createServer((req, res) => {
-    // Health check endpoint
-    if (req.url === '/health') {
+    // Health check endpoints (Railway checks /)
+    if (req.url === '/health' || req.url === '/') {
+        // Check if we have client files
+        const indexPath = join(CLIENT_DIST_PATH, 'index.html');
+        if (req.url === '/' && existsSync(indexPath)) {
+            // Serve the actual index.html if it exists
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(readFileSync(indexPath));
+            return;
+        }
+        // Return health check response
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'ok', protocol: PROTOCOL_VERSION }));
         return;
