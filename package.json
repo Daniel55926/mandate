@@ -1,0 +1,26 @@
+{
+  "name": "mandate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MANDATE: The District Game - 3-player real-time online card game",
+  "workspaces": [
+    "client",
+    "server",
+    "shared",
+    "tools/*"
+  ],
+  "scripts": {
+    "dev:all": "npm run dev:server & npm run dev:client",
+    "build:all": "npm run build --workspaces --if-present",
+    "dev:client": "npm run dev --workspace=client",
+    "dev:server": "npm run dev --workspace=server",
+    "build": "npm run build --workspaces --if-present",
+    "build:client": "npm run build --workspace=client",
+    "build:server": "npm run build --workspace=server",
+    "start": "npm run start --workspace=server",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
