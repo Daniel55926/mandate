@@ -1334,6 +1334,13 @@ function serveStaticFile(req: IncomingMessage, res: ServerResponse): void {
 
     const fullPath = join(CLIENT_DIST_PATH, filePath);
 
+    // Debug logging for asset requests
+    if (filePath.includes('/manifests/') || filePath.includes('/cards/')) {
+        console.log(`[Server] Asset request: ${filePath}`);
+        console.log(`[Server] Full path: ${fullPath}`);
+        console.log(`[Server] Exists: ${existsSync(fullPath)}`);
+    }
+
     // Security: prevent directory traversal
     if (!fullPath.startsWith(CLIENT_DIST_PATH)) {
         res.writeHead(403);
