@@ -6,6 +6,8 @@
 import { Application } from 'pixi.js';
 import { LobbyScene } from './render/LobbyScene';
 import { MatchScene } from './render/MatchScene';
+import { LoadingScreen } from './render/LoadingScreen';
+import { AssetLoader } from './assets/AssetLoader';
 import { WsClient } from './net/WsClient';
 import { lobbyStore } from './state/LobbyStore';
 import { matchStore } from './state/MatchStore';
@@ -69,6 +71,45 @@ async function main() {
     const wsClient = new WsClient(getWebSocketUrl());
 
     // Create scenes
+    const loadingScreen = new LoadingScreen(app.screen.width, app.screen.height);
+    app.stage.addChild(loadingScreen);
+
+    // Initial Resize for loading screen
+    loadingScreen.onResize(app.screen.width, app.screen.height);
+
+    // Start loading assets
+    try {
+        await AssetLoader.preloadTextures((progress) => {
+            loadingScreen.updateProgress(progress);
+        });
+    } catch (err) {
+        console.error('[Client] Failed to load assets:', err);
+    }
+
+    // Fade out loading screen
+    const startTime = Date.now();
+    const fadeDuration = 500; // ms
+
+    // Wait for fade out
+    await new Promise<void>((resolve) => {
+        const fadeTicker = (_ticker: any) => {
+            const elapsed = Date.now() - startTime;
+            const alpha = 1 - Math.min(1, elapsed / fadeDuration);
+            loadingScreen.alpha = alpha;
+
+            if (alpha <= 0) {
+                app.ticker.remove(fadeTicker);
+                resolve();
+            }
+        };
+        app.ticker.add(fadeTicker);
+    });
+
+    // Clean up loading screen
+    app.stage.removeChild(loadingScreen);
+    loadingScreen.destroy();
+
+    // Initialize Game Scenes after loading
     const lobbyScene = new LobbyScene(app, wsClient);
     const matchScene = new MatchScene(app, wsClient);
 
@@ -76,6 +117,10 @@ async function main() {
     app.stage.addChild(lobbyScene.container);
     matchScene.container.visible = false;
     app.stage.addChild(matchScene.container);
+
+    // Initial layout calculation
+    lobbyScene.onResize(app.screen.width, app.screen.height);
+    matchScene.onResize(app.screen.width, app.screen.height);
 
     let currentScene: Scene = 'lobby';
 
@@ -125,15 +170,19 @@ async function main() {
 
     // Handle resize
     window.addEventListener('resize', () => {
-        if (currentScene === 'lobby') {
-            lobbyScene.onResize(app.screen.width, app.screen.height);
-        } else {
-            matchScene.onResize(app.screen.width, app.screen.height);
+        // If loading screen is still valid (not destroyed), resize it
+        if (!loadingScreen.destroyed) {
+            loadingScreen.onResize(app.screen.width, app.screen.height);
         }
+
+        // Always resize game scenes if they exist
+        // Note: lobbyScene/matchScene might be created after loading
+        if (lobbyScene) lobbyScene.onResize(app.screen.width, app.screen.height);
+        if (matchScene) matchScene.onResize(app.screen.width, app.screen.height);
     });
 
     // Initial layout
-    lobbyScene.onResize(app.screen.width, app.screen.height);
+    // lobbyScene initialized after loading
 
     console.log('[Client] MANDATE client initialized');
 }

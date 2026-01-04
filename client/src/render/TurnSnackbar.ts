@@ -1,5 +1,6 @@
 /**
- * TurnSnackbar - Subtle turn indicator showing "Your turn" / "Opponent thinking..."
+ * TurnSnackbar - Minimal, elegant turn indicator
+ * Positioned below the HUD, shows whose turn it is
  */
 
 import { Container, Graphics, Text, Ticker } from 'pixi.js';
@@ -9,14 +10,14 @@ import type { Seat } from '../state/MatchStore';
 // Constants
 // =============================================================================
 
-const SNACKBAR_WIDTH = 200;
-const SNACKBAR_HEIGHT = 40;
-const CORNER_RADIUS = 20;
+const SNACKBAR_HEIGHT = 28;
+const CORNER_RADIUS = 14;
+const PADDING_X = 20;
 
-const SEAT_COLORS: Record<Seat, number> = {
-    LEFT: 0xE53935,
-    RIGHT: 0x1E88E5,
-    INDEP: 0xFDD835,
+const SEAT_COLORS: Record<Seat, { accent: number; name: string }> = {
+    LEFT: { accent: 0xE53935, name: 'LEFT' },
+    RIGHT: { accent: 0x1E88E5, name: 'RIGHT' },
+    INDEP: { accent: 0xFDD835, name: 'INDEP' },
 };
 
 // =============================================================================
@@ -25,6 +26,7 @@ const SEAT_COLORS: Record<Seat, number> = {
 
 export class TurnSnackbar extends Container {
     private bg: Graphics;
+    private accentDot: Graphics;
     private messageText: Text;
     private pulsePhase: number = 0;
     private isMyTurn: boolean = false;
@@ -34,22 +36,26 @@ export class TurnSnackbar extends Container {
     constructor() {
         super();
 
-        // Background pill
+        // Background pill (dark, minimal)
         this.bg = new Graphics();
-        this.drawBackground();
         this.addChild(this.bg);
+
+        // Pulsing accent dot
+        this.accentDot = new Graphics();
+        this.addChild(this.accentDot);
 
         // Message text
         this.messageText = new Text({
             text: '',
             style: {
                 fontFamily: 'Inter, sans-serif',
-                fontSize: 14,
-                fontWeight: 'bold',
+                fontSize: 12,
+                fontWeight: '600',
                 fill: 0xffffff,
+                letterSpacing: 0.5,
             },
         });
-        this.messageText.anchor.set(0.5);
+        this.messageText.anchor.set(0, 0.5);
         this.addChild(this.messageText);
 
         // Start animation ticker
@@ -63,23 +69,36 @@ export class TurnSnackbar extends Container {
     private drawBackground(): void {
         this.bg.clear();
 
-        const color = this.isMyTurn ? 0x2ecc71 : SEAT_COLORS[this.activeSeat];
-        const pulse = this.isMyTurn ? Math.sin(this.pulsePhase) * 0.1 + 0.9 : 0.8;
+        // Measure text width to size pill
+        const textWidth = this.messageText.width;
+        const pillWidth = textWidth + PADDING_X * 2 + 20; // Extra for dot
 
-        this.bg.roundRect(-SNACKBAR_WIDTH / 2, -SNACKBAR_HEIGHT / 2, SNACKBAR_WIDTH, SNACKBAR_HEIGHT, CORNER_RADIUS);
-        this.bg.fill({ color: 0x1a1a2e, alpha: 0.95 });
-        this.bg.stroke({ width: 2, color, alpha: pulse });
+        // Dark pill background
+        this.bg.roundRect(-pillWidth / 2, -SNACKBAR_HEIGHT / 2, pillWidth, SNACKBAR_HEIGHT, CORNER_RADIUS);
+        this.bg.fill({ color: 0x111111, alpha: 0.9 });
 
-        // Subtle inner glow for "Your turn"
+        // Subtle border
+        this.bg.roundRect(-pillWidth / 2, -SNACKBAR_HEIGHT / 2, pillWidth, SNACKBAR_HEIGHT, CORNER_RADIUS);
+        this.bg.stroke({ width: 1, color: 0x333333 });
+
+        // Position text and dot
+        const dotX = -pillWidth / 2 + 14;
+        this.accentDot.x = dotX;
+        this.messageText.x = dotX + 12;
+    }
+
+    private drawAccentDot(): void {
+        const color = this.isMyTurn ? 0x2ecc71 : SEAT_COLORS[this.activeSeat].accent;
+        const pulse = 0.6 + Math.sin(this.pulsePhase * 2) * 0.4;
+
+        this.accentDot.clear();
+        this.accentDot.circle(0, 0, 4);
+        this.accentDot.fill({ color, alpha: pulse });
+
+        // Outer glow ring
         if (this.isMyTurn) {
-            this.bg.roundRect(
-                -SNACKBAR_WIDTH / 2 + 2,
-                -SNACKBAR_HEIGHT / 2 + 2,
-                SNACKBAR_WIDTH - 4,
-                SNACKBAR_HEIGHT - 4,
-                CORNER_RADIUS - 2
-            );
-            this.bg.fill({ color, alpha: 0.1 * pulse });
+            this.accentDot.circle(0, 0, 6);
+            this.accentDot.stroke({ width: 1, color: 0x2ecc71, alpha: pulse * 0.5 });
         }
     }
 
@@ -87,15 +106,7 @@ export class TurnSnackbar extends Container {
         if (!this.visible) return;
 
         this.pulsePhase += 0.08;
-        this.drawBackground();
-
-        // Subtle scale pulse for "Your turn"
-        if (this.isMyTurn) {
-            const scale = 1 + Math.sin(this.pulsePhase) * 0.02;
-            this.scale.set(scale);
-        } else {
-            this.scale.set(1);
-        }
+        this.drawAccentDot();
     }
 
     public update(isMyTurn: boolean, activeSeat: Seat): void {
@@ -103,16 +114,17 @@ export class TurnSnackbar extends Container {
         this.activeSeat = activeSeat;
 
         if (isMyTurn) {
-            this.messageText.text = '→ Your turn';
-            this.messageText.style.fill = 0x2ecc71;
+            this.messageText.text = 'Your turn';
+            this.messageText.style.fill = 0xffffff;
         } else {
-            const seatName = activeSeat === 'LEFT' ? 'Left' : activeSeat === 'RIGHT' ? 'Right' : 'Indep';
-            this.messageText.text = `${seatName} thinking...`;
-            this.messageText.style.fill = SEAT_COLORS[activeSeat];
+            const seatName = SEAT_COLORS[activeSeat].name;
+            this.messageText.text = `${seatName}'s turn`;
+            this.messageText.style.fill = 0x999999;
         }
 
         this.visible = true;
         this.drawBackground();
+        this.drawAccentDot();
     }
 
     public hide(): void {

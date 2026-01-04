@@ -64,15 +64,22 @@ class AssetLoaderClass {
     /**
      * Preload all card textures
      */
-    async preloadTextures(): Promise<void> {
+    async preloadTextures(onProgress?: (progress: number) => void): Promise<void> {
         if (!this.loaded) {
             await this.loadCatalog();
         }
 
         const loadPromises: Promise<void>[] = [];
+        let loadedCount = 0;
+        const total = this.catalog.length;
 
         for (const entry of this.catalog) {
-            const promise = this.loadTexture(entry.card_def_id, entry.display.front_png);
+            const promise = this.loadTexture(entry.card_def_id, entry.display.front_png).then(() => {
+                loadedCount++;
+                if (onProgress) {
+                    onProgress(loadedCount / total);
+                }
+            });
             loadPromises.push(promise);
         }
 

@@ -920,13 +920,19 @@ function finalizePlay(
         turn_number: round.turn_number,
     });
 
-    // Start next turn
-    round.advanceTurn();
-    round.startTurn();
-    emitEvent(room, 'TURN_STARTED', {
-        active_seat: round.active_seat,
-        turn_number: round.turn_number,
-    });
+    // Start next turn after animation delay (1.5 seconds for card landing animation)
+    setTimeout(() => {
+        if (!room.match) return; // Room may have ended
+        const currentRound = room.match.current_round;
+        if (!currentRound || currentRound.round_id !== round.round_id) return; // Round changed
+
+        round.advanceTurn();
+        round.startTurn();
+        emitEvent(room, 'TURN_STARTED', {
+            active_seat: round.active_seat,
+            turn_number: round.turn_number,
+        });
+    }, 1500);
 }
 
 // =============================================================================
@@ -1094,7 +1100,7 @@ function handlePassTurn(session: ClientSession, message: IntentMessage): void {
 // Crisis Declaration Handler
 // =============================================================================
 
-const CRISIS_TIMEOUT_MS = 10000; // 10 seconds
+const CRISIS_TIMEOUT_MS = 20000; // 20 seconds
 const crisisTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
 function handleDeclareCrisis(session: ClientSession, message: IntentMessage): void {
@@ -1382,9 +1388,50 @@ function autoDeclare(room: ReturnType<typeof getRoom>, seat: Seat): void {
         return;
     }
 
-    // Deterministic auto-declare: pick first color and value 5
-    const autoColor = 'INSTITUTION';
-    const autoValue = '5';
+    // Smart auto-declare: pick the color and value that gives the best advantage
+    // Strategy: Pick highest value (10) and the color with fewest cards already played
+    const validColors = ['INSTITUTION', 'BASE', 'MEDIA', 'CAPITAL', 'IDEOLOGY', 'LOGISTICS'] as const;
+    const validValues = ['10', '9', '8', '7', '6', '5', '4', '3', '2'] as const; // Prefer high values
+
+    // Count cards per color in all districts to find the least contested color
+    const colorCounts: Record<string, number> = {};
+    for (const color of validColors) {
+        colorCounts[color] = 0;
+    }
+
+    // Count cards per color across all districts
+    for (let i = 0; i < 7; i++) {
+        const district = round.getDistrict(`D${i}`);
+        if (district) {
+            for (const seatKey of ['LEFT', 'RIGHT', 'INDEP'] as Seat[]) {
+                for (const card of district.sides[seatKey].slots) {
+                    if (card && card.asset_color) {
+                        colorCounts[card.asset_color] = (colorCounts[card.asset_color] || 0) + 1;
+                    }
+                }
+            }
+        }
+    }
+
+    // Pick color with fewest cards (least contested)
+    let autoColor: string = validColors[0];
+    let minCount = Infinity;
+    for (const color of validColors) {
+        if (colorCounts[color] < minCount) {
+            minCount = colorCounts[color];
+            autoColor = color;
+        }
+    }
+
+    // Pick highest value
+    const autoValue = validValues[0]; // '10'
+
+    console.log(`[AutoDeclare] AI selecting: ${autoColor} ${autoValue} (color counts: ${JSON.stringify(colorCounts)})`);
+
+    const pendingPlay = {
+        district_id: round.pending_crisis.district_id,
+        slot_index: round.pending_crisis.slot_index,
+    };
 
     const success = round.declareCrisis(seat, autoColor as any, autoValue as any);
     if (!success) return;
@@ -1399,10 +1446,7 @@ function autoDeclare(room: ReturnType<typeof getRoom>, seat: Seat): void {
     });
 
     // Finalize play
-    finalizeCrisisPlay(room, seat, {
-        district_id: round.pending_play?.district_id || '',
-        slot_index: round.pending_play?.slot_index || 0,
-    });
+    finalizeCrisisPlay(room, seat, pendingPlay);
 }
 
 // =============================================================================

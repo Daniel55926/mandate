@@ -3,7 +3,7 @@
  * Home view → Room view with seats, ready toggles, invite code
  */
 
-import { Container, Text, Graphics, Application } from 'pixi.js';
+import { Container, Text, Graphics, Application, Ticker, Sprite, Assets } from 'pixi.js';
 import { COLORS } from '../main';
 import { WsClient } from '../net/WsClient';
 import { lobbyStore, type LobbyState, type PlayerInfo } from '../state/LobbyStore';
@@ -22,6 +22,7 @@ export class LobbyScene {
     private homeView: Container;
     private roomView: Container;
     private loadingOverlay: Container;
+    private backgroundSprite: Sprite | null = null;
 
     // Home view elements
     private titleText!: Text;
@@ -45,6 +46,8 @@ export class LobbyScene {
 
     // State
     private currentState: LobbyState | null = null;
+    private screenWidth: number = 1920;
+    private screenHeight: number = 1080;
 
     constructor(_app: Application, wsClient: WsClient) {
         this.wsClient = wsClient;
@@ -59,6 +62,17 @@ export class LobbyScene {
         this.container.addChild(this.homeView);
         this.container.addChild(this.roomView);
         this.container.addChild(this.loadingOverlay);
+
+        // Load background image
+        Assets.load('/backgrounds/lobby_bg.png').then((texture) => {
+            this.backgroundSprite = new Sprite(texture);
+            this.backgroundSprite.label = 'background';
+            this.container.addChildAt(this.backgroundSprite, 0); // Add behind everything
+            // Apply current screen dimensions immediately
+            this.applyBackgroundSize();
+        }).catch((err) => {
+            console.warn('[LobbyScene] Failed to load background:', err);
+        });
 
         this.setupHomeView();
         this.setupRoomView();
@@ -281,23 +295,128 @@ export class LobbyScene {
     // Loading Overlay Setup
     // ===========================================================================
 
+    // Loading state
+    private currentProgress: number = 0;
+    private targetProgress: number = 0;
+    private realProgress: number = 0;
+    private loadingStartTime: number = 0;
+    private lastRoomPhase: string = '';
+
     private setupLoadingOverlay(): void {
+        // Full screen dark background
         const bg = new Graphics();
+        bg.label = 'loadingBg';
         bg.rect(0, 0, 2000, 2000);
-        bg.fill({ color: 0x000000, alpha: 0.8 });
+        bg.fill({ color: 0x000000, alpha: 0.95 });
         this.loadingOverlay.addChild(bg);
 
-        const loadingText = new Text({
-            text: 'Loading match...',
+        // Large logo text
+        const logoText = new Text({
+            text: 'MANDATE',
             style: {
                 fontFamily: 'Inter, sans-serif',
-                fontSize: 32,
-                fill: COLORS.TEXT_LIGHT,
+                fontSize: 64,
+                fontWeight: '900',
+                fill: 0xffffff,
+                letterSpacing: 8,
+            },
+        });
+        logoText.anchor.set(0.5);
+        logoText.label = 'loadingLogo';
+        this.loadingOverlay.addChild(logoText);
+
+        // Progress bar background
+        const barWidth = 400;
+        const barHeight = 6;
+        const barRadius = 3;
+
+        const progressBarBg = new Graphics();
+        progressBarBg.roundRect(0, 0, barWidth, barHeight, barRadius);
+        progressBarBg.fill({ color: 0x333333 });
+        progressBarBg.pivot.set(barWidth / 2, barHeight / 2);
+        progressBarBg.label = 'progressBarBg';
+        this.loadingOverlay.addChild(progressBarBg);
+
+        // Progress bar fill (animated)
+        const progressBarFill = new Graphics();
+        progressBarFill.label = 'progressBarFill';
+        this.loadingOverlay.addChild(progressBarFill);
+
+        // Loading text
+        const loadingText = new Text({
+            text: 'PREPARING BATTLEFIELD...',
+            style: {
+                fontFamily: 'Mono, monospace',
+                fontSize: 12,
+                fill: 0x666666,
+                letterSpacing: 2,
             },
         });
         loadingText.anchor.set(0.5);
         loadingText.label = 'loadingText';
         this.loadingOverlay.addChild(loadingText);
+
+        // Animation state
+        let pulsePhase = 0;
+
+        // Start animation ticker
+        const animateTicker = () => {
+            if (!this.loadingOverlay.visible) return;
+
+            pulsePhase += 0.05;
+
+            // Pulse logo
+            logoText.alpha = 0.8 + Math.sin(pulsePhase) * 0.2;
+
+            // Calculate target progress based on time AND real progress
+            // This ensures smooth animation even between server updates
+            if (this.loadingStartTime > 0) {
+                // Calculate time-based fake progress
+                // Phase 1 (0-2s): Fast to 75%
+                // Phase 2 (2s+): Slow creep to 99%
+                const elapsed = Date.now() - this.loadingStartTime;
+                let fakePct = 0;
+
+                if (elapsed < 2000) {
+                    const t = elapsed / 2000;
+                    fakePct = 0.75 * (1 - (1 - t) * (1 - t));
+                } else {
+                    // Asymptotic approach to 99% over time
+                    const t = (elapsed - 2000) / 8000;
+                    fakePct = 0.75 + (0.24 * (1 - Math.exp(-t)));
+                }
+
+                // If we are fully done (realProgress >= 1), target is 1
+                if (this.realProgress >= 1) {
+                    this.targetProgress = 1;
+                } else {
+                    // Otherwise combine fake and real, capped at 99%
+                    this.targetProgress = Math.min(0.99, Math.max(fakePct, this.realProgress, 0.1));
+                }
+            }
+
+            // Interpolate progress
+            this.currentProgress += (this.targetProgress - this.currentProgress) * 0.1;
+
+            if (Math.abs(this.targetProgress - this.currentProgress) < 0.005) {
+                this.currentProgress = this.targetProgress;
+            }
+
+            // Draw progress bar
+            const w = Math.max(0, barWidth * this.currentProgress);
+            progressBarFill.clear();
+            if (w > 0) {
+                progressBarFill.roundRect(0, 0, w, barHeight, barRadius);
+                progressBarFill.fill({ color: COLORS.MEDIA });
+            }
+
+            // Update text percentage
+            const pct = Math.floor(this.currentProgress * 100);
+            loadingText.text = `PREPARING BATTLEFIELD... ${pct}%`;
+        };
+
+        Ticker.shared.add(animateTicker);
+        (this.loadingOverlay as any)._animateTicker = animateTicker;
     }
 
     // ===========================================================================
@@ -371,11 +490,28 @@ export class LobbyScene {
                 break;
             case 'ROOM_LOADING':
                 this.phaseText.text = 'Loading match...';
+
+                // Initialize start time on phase change
+                if (this.lastRoomPhase !== 'ROOM_LOADING') {
+                    this.loadingStartTime = Date.now();
+                }
+
+                // Calculate real progress (players loaded)
+                const loadedCount = room.players.filter(p => p.loaded).length;
+                const totalPlayers = room.player_count > 0 ? room.player_count : 1;
+                this.realProgress = loadedCount / totalPlayers;
                 break;
             case 'ROOM_IN_MATCH':
                 this.phaseText.text = 'Match in progress';
+                this.realProgress = 1; // Ensure real progress completes
+                break;
+            default:
+                this.targetProgress = 0;
+                this.currentProgress = 0;
                 break;
         }
+
+        this.lastRoomPhase = room.room_phase;
 
         // Update seats
         for (let i = 0; i < 3; i++) {
@@ -485,6 +621,19 @@ export class LobbyScene {
         const cx = width / 2;
         const cy = height / 2;
 
+        // Store dimensions for async background loading
+        this.screenWidth = width;
+        this.screenHeight = height;
+
+        // Background - cover entire screen
+        if (this.backgroundSprite && this.backgroundSprite.texture) {
+            const bgScale = Math.max(width / this.backgroundSprite.texture.width, height / this.backgroundSprite.texture.height);
+            this.backgroundSprite.width = this.backgroundSprite.texture.width * bgScale;
+            this.backgroundSprite.height = this.backgroundSprite.texture.height * bgScale;
+            this.backgroundSprite.x = (width - this.backgroundSprite.width) / 2;
+            this.backgroundSprite.y = (height - this.backgroundSprite.height) / 2;
+        }
+
         // Home view
         this.titleText.x = cx;
         this.titleText.y = cy - 120;
@@ -528,11 +677,44 @@ export class LobbyScene {
         this.statusText.x = cx;
         this.statusText.y = height - 20;
 
-        // Loading overlay
+        // Loading overlay - position all elements
+        const loadingBg = this.loadingOverlay.getChildByName('loadingBg') as Graphics;
+        const loadingLogo = this.loadingOverlay.getChildByName('loadingLogo') as Text;
+        const progressBarBg = this.loadingOverlay.getChildByName('progressBarBg') as Graphics;
+        const progressBarFill = this.loadingOverlay.getChildByName('progressBarFill') as Graphics;
         const loadingText = this.loadingOverlay.getChildByName('loadingText') as Text;
+
+        if (loadingBg) {
+            loadingBg.clear();
+            loadingBg.rect(0, 0, width, height);
+            loadingBg.fill({ color: 0x000000, alpha: 0.95 });
+        }
+        if (loadingLogo) {
+            loadingLogo.x = cx;
+            loadingLogo.y = cy - 40;
+        }
+        if (progressBarBg) {
+            progressBarBg.x = cx;
+            progressBarBg.y = cy + 40;
+        }
+        if (progressBarFill) {
+            progressBarFill.x = cx - 200; // barWidth/2
+            progressBarFill.y = cy + 40 - 3; // barHeight/2
+        }
         if (loadingText) {
             loadingText.x = cx;
-            loadingText.y = cy;
+            loadingText.y = cy + 65;
+        }
+    }
+
+    private applyBackgroundSize(): void {
+        if (this.backgroundSprite && this.backgroundSprite.texture) {
+            const bgScale = Math.max(this.screenWidth / this.backgroundSprite.texture.width, this.screenHeight / this.backgroundSprite.texture.height);
+            this.backgroundSprite.width = this.backgroundSprite.texture.width * bgScale;
+            this.backgroundSprite.height = this.backgroundSprite.texture.height * bgScale;
+            this.backgroundSprite.x = (this.screenWidth - this.backgroundSprite.width) / 2;
+            this.backgroundSprite.y = (this.screenHeight - this.backgroundSprite.height) / 2;
         }
     }
 }
+

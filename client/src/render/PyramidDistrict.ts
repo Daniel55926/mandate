@@ -7,9 +7,9 @@ import { TurnStack } from './TurnStack';
 // =============================================================================
 
 const FACTION_COLORS: Record<Seat, { base: number; light: number; dark: number }> = {
-    LEFT: { base: 0xE53935, light: 0xEF9A9A, dark: 0xB71C1C },
-    RIGHT: { base: 0x1E88E5, light: 0x90CAF9, dark: 0x0D47A1 },
-    INDEP: { base: 0xFDD835, light: 0xFFF59D, dark: 0xF57F17 },
+    LEFT: { base: 0xE53935, light: 0xEF9A9A, dark: 0x8B1538 },   // Match HUD bg
+    RIGHT: { base: 0x1E88E5, light: 0x90CAF9, dark: 0x1A4B8C },  // Match HUD bg
+    INDEP: { base: 0xFDD835, light: 0xFFF59D, dark: 0x8B7B00 },  // Match HUD bg
 };
 
 // ... lines 11-20 unchanged ...
@@ -47,12 +47,22 @@ export class PyramidDistrict extends Container {
     // Idle micro-motion state
     private idlePhase: number = 0;
     private punchScale: number = 1.0;
+    private targetPunchScale: number = 1.0;
     private isContested: boolean = false;
     private contestedPhase: number = 0;
     private centerDot: Graphics;
     private flashGraphics: Graphics;
     private flashAlpha: number = 0;
     private idleTickerCallback: ((ticker: Ticker) => void) | null = null;
+
+    // Impact VFX state
+    private shockwaveGraphics: Graphics;
+    private impactParticlesGraphics: Graphics;
+    private impactParticles: { x: number; y: number; vx: number; vy: number; life: number; size: number; color: number }[] = [];
+    private shockwavePhase: number = 0;
+    private shockwaveColor: number = 0xffffff;
+    private shockwaveActive: boolean = false;
+    // stacksSuppressed removed
 
     // Label
     // labelText removed
@@ -99,6 +109,14 @@ export class PyramidDistrict extends Container {
         this.addChild(this.edgesGraphics);
         this.addChild(this.centerDot);
 
+        // Impact VFX layers (on top)
+        this.shockwaveGraphics = new Graphics();
+        this.shockwaveGraphics.alpha = 0;
+        this.addChild(this.shockwaveGraphics);
+
+        this.impactParticlesGraphics = new Graphics();
+        this.addChild(this.impactParticlesGraphics);
+
         // District label removed per user request
 
         // Initialize slots
@@ -131,8 +149,13 @@ export class PyramidDistrict extends Container {
         // Slow rotation: ~±1° for subtle organic feel
         const idleRotation = Math.sin(this.idlePhase * 0.15) * 0.02;
 
-        // Apply punch scale on top of breath (slower decay for more visible punch)
-        this.punchScale += (1.0 - this.punchScale) * 0.08;
+        // Apply punch scale with elastic easing (bounce back)
+        const punchDiff = this.targetPunchScale - this.punchScale;
+        this.punchScale += punchDiff * 0.15;
+        if (Math.abs(punchDiff) < 0.01) {
+            // Bounce back to 1.0 with overshoot
+            this.targetPunchScale += (1.0 - this.targetPunchScale) * 0.1;
+        }
         const totalScale = breathScale * this.punchScale;
 
         // Flash decay
@@ -169,6 +192,69 @@ export class PyramidDistrict extends Container {
         const dotScale = 1 + Math.sin(this.idlePhase * 1.5) * 0.25;
         this.centerDot.alpha = dotAlpha;
         this.centerDot.scale.set(dotScale);
+
+        // Update shockwave VFX
+        if (this.shockwaveActive) {
+            this.shockwavePhase += 0.04;
+            if (this.shockwavePhase >= 1) {
+                this.shockwaveActive = false;
+                this.shockwaveGraphics.alpha = 0;
+            } else {
+                this.drawShockwave();
+            }
+        }
+
+        // Update impact particles
+        this.updateImpactParticles();
+    }
+
+    private drawShockwave(): void {
+        const g = this.shockwaveGraphics;
+        g.clear();
+
+        const maxRadius = this.size * 1.2;
+        const radius = this.shockwavePhase * maxRadius;
+        const alpha = (1 - this.shockwavePhase) * 0.8;
+        const lineWidth = 4 * (1 - this.shockwavePhase) + 1;
+
+        g.circle(0, 0, radius);
+        g.stroke({ width: lineWidth, color: this.shockwaveColor, alpha });
+
+        // Inner ring (faster)
+        const innerRadius = this.shockwavePhase * 0.7 * maxRadius;
+        if (innerRadius > 10) {
+            g.circle(0, 0, innerRadius);
+            g.stroke({ width: 2, color: 0xffffff, alpha: alpha * 0.5 });
+        }
+
+        g.alpha = 1;
+    }
+
+    private updateImpactParticles(): void {
+        const g = this.impactParticlesGraphics;
+        g.clear();
+
+        for (let i = this.impactParticles.length - 1; i >= 0; i--) {
+            const p = this.impactParticles[i];
+
+            // Physics
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.15; // Gravity
+            p.vx *= 0.98; // Friction
+            p.life -= 1;
+
+            if (p.life <= 0) {
+                this.impactParticles.splice(i, 1);
+                continue;
+            }
+
+            // Render
+            const alpha = p.life / 60;
+            const size = p.size * (0.5 + alpha * 0.5);
+            g.circle(p.x, p.y, size);
+            g.fill({ color: p.color, alpha });
+        }
     }
 
     // =========================================================================
@@ -221,7 +307,6 @@ export class PyramidDistrict extends Container {
             const stack = this.turnStacks![seat];
 
             // Always ensure stack is part of scene.
-            // Internal logic hides it if empty and inactive.
             stack.visible = true;
 
             // Get played cards for this seat in this district
@@ -651,12 +736,44 @@ export class PyramidDistrict extends Container {
     // Card Landing & Contested Animations
     // =========================================================================
 
+
+
     /**
-     * Trigger a punch scale animation when a card lands on this pyramid
+     * Play full card impact VFX: shockwave ring, particle burst, elastic bounce
+     * @param seat The seat that played the card (to target suppression)
+     * @param color Optional color for VFX (defaults to white)
      */
-    public playCardLandedPunch(): void {
-        this.punchScale = 1.15;
-        this.flashAlpha = 0.8;
+    public playCardImpact(_seat: Seat, color: number = 0xffffff): void {
+        // 1. Elastic punch scale (overshoot then settle)
+        this.targetPunchScale = 1.25;
+        this.punchScale = 0.9; // Start compressed for more impact
+        this.flashAlpha = 0.9;
+
+        // 2. Shockwave ring
+        this.shockwaveColor = color;
+        this.shockwavePhase = 0;
+        this.shockwaveActive = true;
+        this.shockwaveGraphics.alpha = 1;
+
+        // 3. Color flash (tint the white overlay)
+        this.flashGraphics.tint = color;
+
+        // 4. Particle burst (25 particles)
+        for (let i = 0; i < 25; i++) {
+            const angle = (Math.PI * 2 * i) / 25 + Math.random() * 0.3;
+            const speed = 3 + Math.random() * 4;
+            this.impactParticles.push({
+                x: 0,
+                y: 0,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 2, // Upward bias
+                life: 45 + Math.random() * 25,
+                size: 2 + Math.random() * 4,
+                color: Math.random() > 0.3 ? color : 0xffffff,
+            });
+        }
+
+
     }
 
     /**

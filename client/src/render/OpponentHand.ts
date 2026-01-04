@@ -149,6 +149,8 @@ export class OpponentHand extends Container {
     private cards: CardBack[] = [];
     private side: 'left' | 'right';
     private seat: Seat;
+    private isActive: boolean = false;
+    private activeBorder: Graphics;
     private cardTexture: Texture | null = null;
     private glowColor: number;
     private tickerCallback: ((ticker: Ticker) => void) | null = null;
@@ -161,12 +163,75 @@ export class OpponentHand extends Container {
         this.glowColor = FACTION_GLOW_COLORS[seat];
         this.sortableChildren = true;
 
+        // Active indicator (glow strip along edge)
+        this.activeBorder = new Graphics();
+        this.activeBorder.alpha = 0;
+        this.addChild(this.activeBorder);
+
         // Load card back texture
         this.loadTexture();
 
         // Start physics ticker
-        this.tickerCallback = () => this.updatePhysics();
+        this.tickerCallback = () => {
+            this.updatePhysics();
+            if (this.isActive) {
+                // Pulse active border
+                this.activeBorder.alpha = 0.6 + Math.sin(Date.now() * 0.005) * 0.4;
+            }
+        };
         Ticker.shared.add(this.tickerCallback);
+    }
+
+    public setActive(active: boolean): void {
+        this.isActive = active;
+        this.activeBorder.visible = active;
+        if (active) {
+            this.drawActiveBorder();
+        } else {
+            this.activeBorder.alpha = 0;
+        }
+    }
+
+    private drawActiveBorder(): void {
+        this.activeBorder.clear();
+        const width = 15;
+        const height = this.screenHeight;
+
+        // Gradient-like strip
+        this.activeBorder.rect(
+            this.side === 'left' ? 0 : -width,
+            -height / 2,
+            width,
+            height
+        );
+        this.activeBorder.fill({ color: this.glowColor });
+
+        // Add a second wider, softer glow
+        this.activeBorder.rect(
+            this.side === 'left' ? 0 : -50,
+            -height / 2,
+            50,
+            height
+        );
+        this.activeBorder.fill({ color: this.glowColor, alpha: 0.3 });
+
+        // Position at edge
+        this.activeBorder.x = this.side === 'left' ? 0 : 0; // Relative to container text
+        // Container is positioned at 0,0 or width,0 in MatchScene? 
+        // In MatchScene: opponentHandLeft x=0, opponentHandRight x=width
+        // So for Left, x=0 is left edge. For Right, x=0 (container origin) is right edge.
+        // Wait, right container is at x=width.
+        // If right container is at x=width, drawing at -width puts it inside screen.
+        // Correct.
+
+        // OpponentHand code uses `centerY` relative to screenHeight/2 for cards.
+        // The container itself seems to be at 0,0 for left and width,0 for right?
+        // Let's check MatchScene again.
+        // MatchScene: 
+        // this.opponentHandLeft.x = 0; 
+        // this.opponentHandRight.x = width;
+
+        // This confirms my assumption.
     }
 
     private async loadTexture(): Promise<void> {
@@ -345,6 +410,9 @@ export class OpponentHand extends Container {
     public setScreenHeight(height: number): void {
         this.screenHeight = height;
         this.updateLayout();
+        if (this.isActive) {
+            this.drawActiveBorder();
+        }
     }
 
     public destroy(): void {

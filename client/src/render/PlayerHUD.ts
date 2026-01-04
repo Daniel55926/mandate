@@ -1,6 +1,6 @@
 /**
- * PlayerHUD - Video game style player indicator bar
- * Shows 3 player tiles with active/next indicators and animations
+ * PlayerHUD - Premium glass-card style player indicator
+ * Shows 3 player tiles with elegant active indicators and animations
  */
 
 import { Container, Graphics, Text, Ticker } from 'pixi.js';
@@ -10,28 +10,29 @@ import type { Seat } from '../state/MatchStore';
 // Constants
 // =============================================================================
 
-const TILE_WIDTH = 160;
-const TILE_HEIGHT = 70;
-const TILE_GAP = 20;
-const CORNER_RADIUS = 12;
+const TILE_WIDTH = 140;
+const TILE_HEIGHT = 55;
+const TILE_GAP = 12;
+const CORNER_RADIUS = 8;
+const ACCENT_WIDTH = 4;
 
-const FACTION_COLORS: Record<Seat, { bg: number; border: number; text: string }> = {
-    LEFT: { bg: 0x8B1538, border: 0xE53935, text: 'LEFT' },
-    RIGHT: { bg: 0x1A4B8C, border: 0x1E88E5, text: 'RIGHT' },
-    INDEP: { bg: 0x8B7B00, border: 0xFDD835, text: 'INDEP' },
+const FACTION_COLORS: Record<Seat, { accent: number; glow: number; name: string }> = {
+    LEFT: { accent: 0xE53935, glow: 0xE53935, name: 'LEFT' },
+    RIGHT: { accent: 0x1E88E5, glow: 0x1E88E5, name: 'RIGHT' },
+    INDEP: { accent: 0xFDD835, glow: 0xFDD835, name: 'INDEP' },
 };
 
 // =============================================================================
-// PlayerTile - Individual player indicator
+// PlayerTile - Individual player indicator (Glass-card design)
 // =============================================================================
 
 class PlayerTile extends Container {
     public seat: Seat;
     private bg: Graphics;
+    private accentBar: Graphics;
     private glowGraphics: Graphics;
     private nameText: Text;
-    private scoreText: Text;
-    private roundsWonText: Text;
+    private statsText: Text;
     private turnBadge: Graphics;
     private turnBadgeText: Text;
 
@@ -39,70 +40,65 @@ class PlayerTile extends Container {
     private pulsePhase: number = 0;
     private tickerCallback: ((ticker: Ticker) => void) | null = null;
 
+    private districts: number = 0;
+    private roundsWon: number = 0;
+
     constructor(seat: Seat) {
         super();
         this.seat = seat;
         const colors = FACTION_COLORS[seat];
 
-        // Glow layer (behind bg)
+        // Glow layer (behind everything)
         this.glowGraphics = new Graphics();
         this.glowGraphics.alpha = 0;
         this.addChild(this.glowGraphics);
 
-        // Background
+        // Main background (glass card)
         this.bg = new Graphics();
         this.drawBackground(false);
         this.addChild(this.bg);
 
-        // Faction name
+        // Faction accent bar (left edge)
+        this.accentBar = new Graphics();
+        this.drawAccentBar(false);
+        this.addChild(this.accentBar);
+
+        // Faction name (bold, left-aligned)
         this.nameText = new Text({
-            text: colors.text,
+            text: colors.name,
             style: {
                 fontFamily: 'Inter, sans-serif',
-                fontSize: 18,
-                fontWeight: 'bold',
+                fontSize: 16,
+                fontWeight: '700',
                 fill: 0xffffff,
+                letterSpacing: 1,
             },
         });
         this.nameText.anchor.set(0, 0.5);
-        this.nameText.x = -TILE_WIDTH / 2 + 15;
-        this.nameText.y = -18;
+        this.nameText.x = -TILE_WIDTH / 2 + ACCENT_WIDTH + 12;
+        this.nameText.y = -10;
         this.addChild(this.nameText);
 
-        // Score (districts this round)
-        this.scoreText = new Text({
-            text: 'Districts: 0',
+        // Stats text (Districts / Rounds)
+        this.statsText = new Text({
+            text: '0 districts · 0/2 rounds',
             style: {
                 fontFamily: 'Inter, sans-serif',
-                fontSize: 11,
-                fill: 0xcccccc,
+                fontSize: 10,
+                fill: 0x888888,
             },
         });
-        this.scoreText.anchor.set(0, 0.5);
-        this.scoreText.x = -TILE_WIDTH / 2 + 15;
-        this.scoreText.y = 5;
-        this.addChild(this.scoreText);
+        this.statsText.anchor.set(0, 0.5);
+        this.statsText.x = -TILE_WIDTH / 2 + ACCENT_WIDTH + 12;
+        this.statsText.y = 10;
+        this.addChild(this.statsText);
 
-        // Rounds won (match score)
-        this.roundsWonText = new Text({
-            text: 'Rounds: 0/2',
-            style: {
-                fontFamily: 'Inter, sans-serif',
-                fontSize: 11,
-                fontWeight: 'bold',
-                fill: 0xFFD700,  // Gold color for rounds won
-            },
-        });
-        this.roundsWonText.anchor.set(0, 0.5);
-        this.roundsWonText.x = -TILE_WIDTH / 2 + 15;
-        this.roundsWonText.y = 20;
-        this.addChild(this.roundsWonText);
-
-        // Turn order badge
+        // Turn order badge (right side)
         this.turnBadge = new Graphics();
-        this.turnBadge.circle(0, 0, 14);
-        this.turnBadge.fill({ color: colors.border, alpha: 0.8 });
-        this.turnBadge.x = TILE_WIDTH / 2 - 25;
+        this.turnBadge.circle(0, 0, 12);
+        this.turnBadge.fill({ color: 0x333333 });
+        this.turnBadge.stroke({ width: 2, color: colors.accent, alpha: 0.6 });
+        this.turnBadge.x = TILE_WIDTH / 2 - 20;
         this.turnBadge.y = 0;
         this.addChild(this.turnBadge);
 
@@ -110,9 +106,9 @@ class PlayerTile extends Container {
             text: '1',
             style: {
                 fontFamily: 'Inter, sans-serif',
-                fontSize: 14,
-                fontWeight: 'bold',
-                fill: 0xffffff,
+                fontSize: 11,
+                fontWeight: '600',
+                fill: 0xcccccc,
             },
         });
         this.turnBadgeText.anchor.set(0.5);
@@ -122,11 +118,30 @@ class PlayerTile extends Container {
     }
 
     private drawBackground(active: boolean): void {
-        const colors = FACTION_COLORS[this.seat];
         this.bg.clear();
+
+        // Glass card effect: dark semi-transparent bg
         this.bg.roundRect(-TILE_WIDTH / 2, -TILE_HEIGHT / 2, TILE_WIDTH, TILE_HEIGHT, CORNER_RADIUS);
-        this.bg.fill({ color: colors.bg, alpha: active ? 1 : 0.7 });
-        this.bg.stroke({ width: active ? 3 : 2, color: colors.border, alpha: active ? 1 : 0.5 });
+        this.bg.fill({ color: 0x1a1a1a, alpha: active ? 0.95 : 0.8 });
+
+        // Subtle border
+        this.bg.roundRect(-TILE_WIDTH / 2, -TILE_HEIGHT / 2, TILE_WIDTH, TILE_HEIGHT, CORNER_RADIUS);
+        this.bg.stroke({ width: 1, color: active ? 0x444444 : 0x333333 });
+    }
+
+    private drawAccentBar(active: boolean): void {
+        const colors = FACTION_COLORS[this.seat];
+        this.accentBar.clear();
+
+        // Left accent bar
+        this.accentBar.roundRect(
+            -TILE_WIDTH / 2,
+            -TILE_HEIGHT / 2 + 4,
+            ACCENT_WIDTH,
+            TILE_HEIGHT - 8,
+            2
+        );
+        this.accentBar.fill({ color: colors.accent, alpha: active ? 1 : 0.6 });
     }
 
     private drawGlow(): void {
@@ -135,9 +150,9 @@ class PlayerTile extends Container {
 
         this.glowGraphics.clear();
 
-        // Multiple glow layers
+        // Soft outer glow
         for (let i = 3; i >= 0; i--) {
-            const expand = i * 4 + 4;
+            const expand = i * 3 + 2;
             this.glowGraphics.roundRect(
                 -TILE_WIDTH / 2 - expand,
                 -TILE_HEIGHT / 2 - expand,
@@ -145,7 +160,7 @@ class PlayerTile extends Container {
                 TILE_HEIGHT + expand * 2,
                 CORNER_RADIUS + expand
             );
-            this.glowGraphics.fill({ color: colors.border, alpha: (0.2 - i * 0.04) * pulse });
+            this.glowGraphics.fill({ color: colors.glow, alpha: (0.15 - i * 0.03) * pulse });
         }
     }
 
@@ -154,19 +169,25 @@ class PlayerTile extends Container {
         this.isActive = active;
 
         this.drawBackground(active);
+        this.drawAccentBar(active);
+
+        // Update text brightness
+        this.nameText.style.fill = active ? 0xffffff : 0xcccccc;
+        this.statsText.style.fill = active ? 0xaaaaaa : 0x666666;
 
         if (active) {
             // Start glow animation
             this.glowGraphics.alpha = 1;
             this.pulsePhase = 0;
             this.scale.set(1.05);
+            this.zIndex = 100;
 
             const animate = () => {
                 if (!this.isActive) {
                     Ticker.shared.remove(animate);
                     return;
                 }
-                this.pulsePhase += 0.08;
+                this.pulsePhase += 0.06;
                 this.drawGlow();
             };
             this.tickerCallback = animate;
@@ -179,15 +200,22 @@ class PlayerTile extends Container {
             }
             this.glowGraphics.alpha = 0;
             this.scale.set(1);
+            this.zIndex = 0;
         }
     }
 
     public setScore(score: number): void {
-        this.scoreText.text = `Districts: ${score}`;
+        this.districts = score;
+        this.updateStatsText();
     }
 
     public setRoundsWon(wins: number): void {
-        this.roundsWonText.text = `Rounds: ${wins}/2`;
+        this.roundsWon = wins;
+        this.updateStatsText();
+    }
+
+    private updateStatsText(): void {
+        this.statsText.text = `${this.districts} dist · ${this.roundsWon}/2 rounds`;
     }
 
     public setTurnOrder(order: number): void {
@@ -195,8 +223,7 @@ class PlayerTile extends Container {
     }
 
     public playScoreAnimation(): void {
-        // Quick scale pulse
-        this.scale.set(1.15);
+        this.scale.set(1.1);
         let progress = 0;
         const animate = () => {
             progress += 0.1;
@@ -206,7 +233,7 @@ class PlayerTile extends Container {
                 return;
             }
             const ease = 1 - Math.pow(1 - progress, 3);
-            this.scale.set(1.15 - 0.1 * ease + (this.isActive ? 0.05 : 0));
+            this.scale.set(1.1 - 0.05 * ease + (this.isActive ? 0.05 : 0));
         };
         Ticker.shared.add(animate);
     }
@@ -225,6 +252,7 @@ export class PlayerHUD extends Container {
 
     constructor() {
         super();
+        this.sortableChildren = true;
 
         // Create 3 player tiles
         const seats: Seat[] = ['LEFT', 'RIGHT', 'INDEP'];
@@ -241,33 +269,33 @@ export class PlayerHUD extends Container {
         });
 
         // Round/Turn indicator (right side)
-        const infoX = totalWidth / 2 + 40;
+        const infoX = totalWidth / 2 + 30;
 
         this.roundText = new Text({
             text: 'Round 1/3',
             style: {
                 fontFamily: 'Inter, sans-serif',
-                fontSize: 16,
-                fontWeight: 'bold',
+                fontSize: 14,
+                fontWeight: '600',
                 fill: 0xffffff,
             },
         });
         this.roundText.anchor.set(0, 0.5);
         this.roundText.x = infoX;
-        this.roundText.y = -10;
+        this.roundText.y = -8;
         this.addChild(this.roundText);
 
         this.turnText = new Text({
             text: 'Turn 1/21',
             style: {
                 fontFamily: 'Inter, sans-serif',
-                fontSize: 12,
-                fill: 0xaaaaaa,
+                fontSize: 11,
+                fill: 0x777777,
             },
         });
         this.turnText.anchor.set(0, 0.5);
         this.turnText.x = infoX;
-        this.turnText.y = 12;
+        this.turnText.y = 10;
         this.addChild(this.turnText);
     }
 
@@ -313,7 +341,6 @@ export class PlayerHUD extends Container {
     }
 
     private playRoundChangeAnimation(): void {
-        // Flash all tiles
         this.tiles.forEach(tile => {
             tile.alpha = 0.5;
             let progress = 0;

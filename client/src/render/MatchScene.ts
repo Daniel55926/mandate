@@ -2,7 +2,7 @@
  * MatchScene - Game board with 7 districts, hand fan, and drag & drop
  */
 
-import { Container, Text, Graphics, Application, FederatedPointerEvent, Sprite, Ticker, Rectangle } from 'pixi.js';
+import { Container, Text, Graphics, Application, FederatedPointerEvent, Sprite, Ticker, Rectangle, Assets } from 'pixi.js';
 import { COLORS } from '../main';
 import { WsClient } from '../net/WsClient';
 import { matchStore, type MatchState, type CardInfo, type Seat } from '../state/MatchStore';
@@ -44,6 +44,8 @@ export class MatchScene {
     private dragContainer: Container;
     private popupOverlay: Container;
     private crisisModal: CrisisModal;
+    private backgroundSprite: Sprite | null = null;
+    private loadedBackgroundSeat: string | null = null; // Track which seat's background is loaded
 
     // Cards
     private cardSprites: Map<string, Container> = new Map();
@@ -100,6 +102,8 @@ export class MatchScene {
         this.container.addChild(this.dragContainer);
         this.container.addChild(this.popupOverlay);
 
+        // Background is loaded dynamically based on player seat in loadBackgroundForSeat()
+
         // Set up stage for global pointer tracking (fixes drag issues when moving fast)
         this.app.stage.eventMode = 'static';
         this.app.stage.hitArea = new Rectangle(0, 0, 10000, 10000);
@@ -124,7 +128,9 @@ export class MatchScene {
         this.container.addChild(this.turnSnackbar);
 
         // Crisis modal (always on top)
+        this.container.sortableChildren = true;
         this.crisisModal = new CrisisModal(wsClient);
+        this.crisisModal.container.zIndex = 2000;
         this.container.addChild(this.crisisModal.container);
 
         this.createBoard();
@@ -142,6 +148,10 @@ export class MatchScene {
             // Subscribe to match store
             matchStore.subscribe((state) => {
                 this.state = state;
+                // Load seat-specific background when mySeat is first known
+                if (state.mySeat && this.loadedBackgroundSeat !== state.mySeat) {
+                    this.loadBackgroundForSeat(state.mySeat);
+                }
                 this.updateUI();
             });
 
@@ -157,10 +167,20 @@ export class MatchScene {
                         eventData.districtIndex || 0
                     );
 
-                    // Trigger punch animation on target pyramid
+                    // Trigger impact VFX on target pyramid with card color
                     const pyramid = this.pyramidDistricts[eventData.districtIndex || 0];
                     if (pyramid) {
-                        pyramid.playCardLandedPunch();
+                        // Map card asset color to hex color
+                        const colorMap: Record<string, number> = {
+                            INSTITUTION: 0x4A90D9, // Blue
+                            BASE: 0x50C878,        // Green
+                            MEDIA: 0xFFD700,       // Yellow
+                            CAPITAL: 0xE74C3C,     // Red
+                            IDEOLOGY: 0x9B59B6,    // Purple
+                            LOGISTICS: 0x7F8C8D,   // Grey
+                        };
+                        const impactColor = colorMap[eventData.card.asset_color || ''] || 0xffffff;
+                        pyramid.playCardImpact(eventData.seat as Seat, impactColor);
                     }
                 } else if (type === 'DISTRICT_CLAIMED') {
                     this.gameHistoryDrawer.addDistrictClaimed(
@@ -738,6 +758,10 @@ export class MatchScene {
         // Update card counts
         this.opponentHandLeft.setCardCount(handCounts[leftOpponentSeat] || 0);
         this.opponentHandRight.setCardCount(handCounts[rightOpponentSeat] || 0);
+
+        // Update active state
+        this.opponentHandLeft.setActive(this.state.round.active_seat === leftOpponentSeat);
+        this.opponentHandRight.setActive(this.state.round.active_seat === rightOpponentSeat);
     }
 
     private updateBackgroundColor(): void {
@@ -752,6 +776,46 @@ export class MatchScene {
 
         const color = bgColors[this.state.mySeat] || 0x1A1A1A;
         this.app.renderer.background.color = color;
+    }
+
+    private loadBackgroundForSeat(seat: Seat): void {
+        // Map seat to background file
+        const bgPaths: Record<Seat, string> = {
+            LEFT: '/backgrounds/match_bg_left.png',
+            RIGHT: '/backgrounds/match_bg_right.png',
+            INDEP: '/backgrounds/match_bg_indep.png',
+        };
+
+        const path = bgPaths[seat];
+        if (!path) return;
+
+        console.log(`[MatchScene] Loading background for seat: ${seat}`);
+
+        Assets.load(path).then((texture) => {
+            // Remove old background if exists
+            if (this.backgroundSprite) {
+                this.container.removeChild(this.backgroundSprite);
+                this.backgroundSprite.destroy();
+            }
+
+            this.backgroundSprite = new Sprite(texture);
+            this.backgroundSprite.label = 'background';
+            this.container.addChildAt(this.backgroundSprite, 0); // Add behind everything
+            this.loadedBackgroundSeat = seat;
+
+            // Apply current screen dimensions
+            const width = this.app.renderer.width;
+            const height = this.app.renderer.height;
+            if (this.backgroundSprite.texture) {
+                const bgScale = Math.max(width / this.backgroundSprite.texture.width, height / this.backgroundSprite.texture.height);
+                this.backgroundSprite.width = this.backgroundSprite.texture.width * bgScale;
+                this.backgroundSprite.height = this.backgroundSprite.texture.height * bgScale;
+                this.backgroundSprite.x = (width - this.backgroundSprite.width) / 2;
+                this.backgroundSprite.y = (height - this.backgroundSprite.height) / 2;
+            }
+        }).catch((err) => {
+            console.warn('[MatchScene] Failed to load background:', err);
+        });
     }
 
     private updatePlayerHUD(): void {
@@ -831,6 +895,15 @@ export class MatchScene {
     public onResize(width: number, height: number): void {
         const cx = width / 2;
         const cy = height / 2;
+
+        // Background - cover entire screen
+        if (this.backgroundSprite) {
+            const bgScale = Math.max(width / this.backgroundSprite.texture.width, height / this.backgroundSprite.texture.height);
+            this.backgroundSprite.width = this.backgroundSprite.texture.width * bgScale;
+            this.backgroundSprite.height = this.backgroundSprite.texture.height * bgScale;
+            this.backgroundSprite.x = (width - this.backgroundSprite.width) / 2;
+            this.backgroundSprite.y = (height - this.backgroundSprite.height) / 2;
+        }
 
         // Mobile breakpoint: 768px
         const isMobile = width < 768;
@@ -927,8 +1000,11 @@ export class MatchScene {
         this.gameHistoryDrawer.x = 0;
         this.gameHistoryDrawer.y = cy - this.gameHistoryDrawer.getDrawerHeight() / 2;
 
-        // Turn snackbar (bottom center, above hand)
+        // Turn snackbar (just below HUD, top center)
         this.turnSnackbar.x = cx;
-        this.turnSnackbar.y = height - 180;
+        this.turnSnackbar.y = 90;
+
+        // Crisis modal (needs screen dimensions)
+        this.crisisModal.resize(width, height);
     }
 }

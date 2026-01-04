@@ -42,6 +42,10 @@ export class TurnStack extends Container {
     // Hover popup for expanded card view
     private hoverPopup: Container | null = null;
 
+    // Suppression state for animation
+    private topCardSuppressedUntil: number = 0;
+    private revealTimer: NodeJS.Timeout | null = null;
+
     constructor(seat: Seat) {
         super();
         this.seat = seat;
@@ -99,6 +103,39 @@ export class TurnStack extends Container {
         return this.cards.length;
     }
 
+    public suppressTopCard(durationMs: number): void {
+        this.topCardSuppressedUntil = Date.now() + durationMs;
+
+        // Apply immediately if stack exists
+        if (this.cardContainers.length > 0) {
+            const top = this.cardContainers[this.cardContainers.length - 1];
+            top.visible = false;
+        }
+
+        // Clear existing timer
+        if (this.revealTimer) clearTimeout(this.revealTimer);
+
+        // Schedule reveal
+        this.revealTimer = setTimeout(() => {
+            this.topCardSuppressedUntil = 0;
+            if (this.cardContainers.length > 0) {
+                const top = this.cardContainers[this.cardContainers.length - 1];
+                top.visible = true;
+                // Optional: fade in? For now just show.
+                top.alpha = 0;
+                // Simple fade in
+                let fade = 0;
+                const ticker = Ticker.shared;
+                const fadeIn = () => {
+                    fade += 0.1;
+                    top.alpha = fade;
+                    if (fade >= 1) ticker.remove(fadeIn);
+                };
+                ticker.add(fadeIn);
+            }
+        }, durationMs);
+    }
+
     // =========================================================================
     // Stack Rendering
     // =========================================================================
@@ -121,6 +158,11 @@ export class TurnStack extends Container {
 
             // Minimal alternating rotation for organic column feel
             container.rotation = (idx % 2 === 0 ? 0.02 : -0.02);
+
+            // Check suppression
+            if (idx === visibleCards.length - 1 && Date.now() < this.topCardSuppressedUntil) {
+                container.visible = false;
+            }
 
             this.addChild(container);
             this.cardContainers.push(container);
@@ -339,14 +381,13 @@ export class TurnStack extends Container {
             12
         );
 
-        // Color based on seat
-        const seatColors: Record<Seat, number> = {
-            LEFT: 0xE53935,
-            RIGHT: 0x1E88E5,
-            INDEP: 0xFDD835,
-        };
+        // Glow fill removed per user request ("placeholder" complaint)
+        // this.glowGraphics.fill({ color: seatColors[this.seat], alpha: 0.4 });
+        // Optional: subtle stroke instead?
+        // this.glowGraphics.stroke({ width: 1, color: seatColors[this.seat], alpha: 0.3 });
 
-        this.glowGraphics.fill({ color: seatColors[this.seat], alpha: 0.4 });
+        // For now, keep it invisible as requested
+        this.glowGraphics.clear();
     }
 
     // =========================================================================
