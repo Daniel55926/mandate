@@ -1,0 +1,752 @@
+[
+  {
+    "card_def_id": "asset.institution.A",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "A",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/A.png",
+      "front_svg": "assets_runtime/cards/svg/institution/A.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_A"
+  },
+  {
+    "card_def_id": "asset.institution.2",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "2",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/02.png",
+      "front_svg": "assets_runtime/cards/svg/institution/02.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_02"
+  },
+  {
+    "card_def_id": "asset.institution.3",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "3",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/03.png",
+      "front_svg": "assets_runtime/cards/svg/institution/03.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_03"
+  },
+  {
+    "card_def_id": "asset.institution.4",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "4",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/04.png",
+      "front_svg": "assets_runtime/cards/svg/institution/04.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_04"
+  },
+  {
+    "card_def_id": "asset.institution.5",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "5",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/05.png",
+      "front_svg": "assets_runtime/cards/svg/institution/05.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_05"
+  },
+  {
+    "card_def_id": "asset.institution.6",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "6",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/06.png",
+      "front_svg": "assets_runtime/cards/svg/institution/06.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_06"
+  },
+  {
+    "card_def_id": "asset.institution.7",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "7",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/07.png",
+      "front_svg": "assets_runtime/cards/svg/institution/07.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_07"
+  },
+  {
+    "card_def_id": "asset.institution.8",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "8",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/08.png",
+      "front_svg": "assets_runtime/cards/svg/institution/08.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_08"
+  },
+  {
+    "card_def_id": "asset.institution.9",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "9",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/09.png",
+      "front_svg": "assets_runtime/cards/svg/institution/09.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_09"
+  },
+  {
+    "card_def_id": "asset.institution.10",
+    "kind": "ASSET",
+    "asset_color": "INSTITUTION",
+    "asset_value": "10",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/institution/10.png",
+      "front_svg": "assets_runtime/cards/svg/institution/10.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "institution_10"
+  },
+  {
+    "card_def_id": "asset.base.A",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "A",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/A.png",
+      "front_svg": "assets_runtime/cards/svg/base/A.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_A"
+  },
+  {
+    "card_def_id": "asset.base.2",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "2",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/02.png",
+      "front_svg": "assets_runtime/cards/svg/base/02.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_02"
+  },
+  {
+    "card_def_id": "asset.base.3",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "3",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/03.png",
+      "front_svg": "assets_runtime/cards/svg/base/03.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_03"
+  },
+  {
+    "card_def_id": "asset.base.4",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "4",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/04.png",
+      "front_svg": "assets_runtime/cards/svg/base/04.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_04"
+  },
+  {
+    "card_def_id": "asset.base.5",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "5",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/05.png",
+      "front_svg": "assets_runtime/cards/svg/base/05.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_05"
+  },
+  {
+    "card_def_id": "asset.base.6",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "6",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/06.png",
+      "front_svg": "assets_runtime/cards/svg/base/06.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_06"
+  },
+  {
+    "card_def_id": "asset.base.7",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "7",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/07.png",
+      "front_svg": "assets_runtime/cards/svg/base/07.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_07"
+  },
+  {
+    "card_def_id": "asset.base.8",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "8",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/08.png",
+      "front_svg": "assets_runtime/cards/svg/base/08.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_08"
+  },
+  {
+    "card_def_id": "asset.base.9",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "9",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/09.png",
+      "front_svg": "assets_runtime/cards/svg/base/09.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_09"
+  },
+  {
+    "card_def_id": "asset.base.10",
+    "kind": "ASSET",
+    "asset_color": "BASE",
+    "asset_value": "10",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/base/10.png",
+      "front_svg": "assets_runtime/cards/svg/base/10.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "base_10"
+  },
+  {
+    "card_def_id": "asset.media.A",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "A",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/A.png",
+      "front_svg": "assets_runtime/cards/svg/media/A.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_A"
+  },
+  {
+    "card_def_id": "asset.media.2",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "2",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/02.png",
+      "front_svg": "assets_runtime/cards/svg/media/02.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_02"
+  },
+  {
+    "card_def_id": "asset.media.3",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "3",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/03.png",
+      "front_svg": "assets_runtime/cards/svg/media/03.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_03"
+  },
+  {
+    "card_def_id": "asset.media.4",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "4",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/04.png",
+      "front_svg": "assets_runtime/cards/svg/media/04.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_04"
+  },
+  {
+    "card_def_id": "asset.media.5",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "5",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/05.png",
+      "front_svg": "assets_runtime/cards/svg/media/05.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_05"
+  },
+  {
+    "card_def_id": "asset.media.6",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "6",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/06.png",
+      "front_svg": "assets_runtime/cards/svg/media/06.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_06"
+  },
+  {
+    "card_def_id": "asset.media.7",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "7",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/07.png",
+      "front_svg": "assets_runtime/cards/svg/media/07.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_07"
+  },
+  {
+    "card_def_id": "asset.media.8",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "8",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/08.png",
+      "front_svg": "assets_runtime/cards/svg/media/08.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_08"
+  },
+  {
+    "card_def_id": "asset.media.9",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "9",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/09.png",
+      "front_svg": "assets_runtime/cards/svg/media/09.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_09"
+  },
+  {
+    "card_def_id": "asset.media.10",
+    "kind": "ASSET",
+    "asset_color": "MEDIA",
+    "asset_value": "10",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/media/10.png",
+      "front_svg": "assets_runtime/cards/svg/media/10.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "media_10"
+  },
+  {
+    "card_def_id": "asset.capital.A",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "A",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/A.png",
+      "front_svg": "assets_runtime/cards/svg/capital/A.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_A"
+  },
+  {
+    "card_def_id": "asset.capital.2",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "2",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/02.png",
+      "front_svg": "assets_runtime/cards/svg/capital/02.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_02"
+  },
+  {
+    "card_def_id": "asset.capital.3",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "3",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/03.png",
+      "front_svg": "assets_runtime/cards/svg/capital/03.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_03"
+  },
+  {
+    "card_def_id": "asset.capital.4",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "4",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/04.png",
+      "front_svg": "assets_runtime/cards/svg/capital/04.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_04"
+  },
+  {
+    "card_def_id": "asset.capital.5",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "5",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/05.png",
+      "front_svg": "assets_runtime/cards/svg/capital/05.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_05"
+  },
+  {
+    "card_def_id": "asset.capital.6",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "6",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/06.png",
+      "front_svg": "assets_runtime/cards/svg/capital/06.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_06"
+  },
+  {
+    "card_def_id": "asset.capital.7",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "7",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/07.png",
+      "front_svg": "assets_runtime/cards/svg/capital/07.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_07"
+  },
+  {
+    "card_def_id": "asset.capital.8",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "8",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/08.png",
+      "front_svg": "assets_runtime/cards/svg/capital/08.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_08"
+  },
+  {
+    "card_def_id": "asset.capital.9",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "9",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/09.png",
+      "front_svg": "assets_runtime/cards/svg/capital/09.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_09"
+  },
+  {
+    "card_def_id": "asset.capital.10",
+    "kind": "ASSET",
+    "asset_color": "CAPITAL",
+    "asset_value": "10",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/capital/10.png",
+      "front_svg": "assets_runtime/cards/svg/capital/10.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "capital_10"
+  },
+  {
+    "card_def_id": "asset.ideology.A",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "A",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/A.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/A.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_A"
+  },
+  {
+    "card_def_id": "asset.ideology.2",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "2",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/02.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/02.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_02"
+  },
+  {
+    "card_def_id": "asset.ideology.3",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "3",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/03.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/03.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_03"
+  },
+  {
+    "card_def_id": "asset.ideology.4",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "4",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/04.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/04.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_04"
+  },
+  {
+    "card_def_id": "asset.ideology.5",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "5",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/05.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/05.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_05"
+  },
+  {
+    "card_def_id": "asset.ideology.6",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "6",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/06.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/06.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_06"
+  },
+  {
+    "card_def_id": "asset.ideology.7",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "7",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/07.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/07.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_07"
+  },
+  {
+    "card_def_id": "asset.ideology.8",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "8",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/08.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/08.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_08"
+  },
+  {
+    "card_def_id": "asset.ideology.9",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "9",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/09.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/09.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_09"
+  },
+  {
+    "card_def_id": "asset.ideology.10",
+    "kind": "ASSET",
+    "asset_color": "IDEOLOGY",
+    "asset_value": "10",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/ideology/10.png",
+      "front_svg": "assets_runtime/cards/svg/ideology/10.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "ideology_10"
+  },
+  {
+    "card_def_id": "asset.logistics.A",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "A",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/A.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/A.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_A"
+  },
+  {
+    "card_def_id": "asset.logistics.2",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "2",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/02.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/02.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_02"
+  },
+  {
+    "card_def_id": "asset.logistics.3",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "3",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/03.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/03.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_03"
+  },
+  {
+    "card_def_id": "asset.logistics.4",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "4",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/04.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/04.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_04"
+  },
+  {
+    "card_def_id": "asset.logistics.5",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "5",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/05.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/05.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_05"
+  },
+  {
+    "card_def_id": "asset.logistics.6",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "6",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/06.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/06.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_06"
+  },
+  {
+    "card_def_id": "asset.logistics.7",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "7",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/07.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/07.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_07"
+  },
+  {
+    "card_def_id": "asset.logistics.8",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "8",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/08.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/08.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_08"
+  },
+  {
+    "card_def_id": "asset.logistics.9",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "9",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/09.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/09.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_09"
+  },
+  {
+    "card_def_id": "asset.logistics.10",
+    "kind": "ASSET",
+    "asset_color": "LOGISTICS",
+    "asset_value": "10",
+    "display": {
+      "front_png": "assets_runtime/cards/fronts/logistics/10.png",
+      "front_svg": "assets_runtime/cards/svg/logistics/10.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "logistics_10"
+  },
+  {
+    "card_def_id": "crisis.1",
+    "kind": "CRISIS",
+    "display": {
+      "front_png": "assets_runtime/cards/crisis/crisis_01.png",
+      "front_svg": "assets_runtime/cards/crisis/crisis.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "crisis_default"
+  },
+  {
+    "card_def_id": "crisis.2",
+    "kind": "CRISIS",
+    "display": {
+      "front_png": "assets_runtime/cards/crisis/crisis_02.png",
+      "front_svg": "assets_runtime/cards/crisis/crisis.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "crisis_default"
+  },
+  {
+    "card_def_id": "crisis.3",
+    "kind": "CRISIS",
+    "display": {
+      "front_png": "assets_runtime/cards/crisis/crisis_03.png",
+      "front_svg": "assets_runtime/cards/crisis/crisis.svg",
+      "back_png": "assets_runtime/cards/back/card_back.png"
+    },
+    "vfx_profile": "crisis_default"
+  }
+]

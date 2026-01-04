@@ -25,8 +25,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Runtime assets (generated)
-assets_runtime/
+# Runtime assets are now tracked (needed for production build)
 
 # Temporary
 tmp/
